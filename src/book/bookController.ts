@@ -178,6 +178,80 @@ const listBooks = async (req: Request, res: Response, next: NextFunction) => {
     }
 };
 
+const getSingleBook = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    const bookId = req.params.bookId;
 
+    try {
+        const book = await bookModel
+            .findOne({ _id: bookId })
+            // populate author field
+            .populate("author", "name");
+        if (!book) {
+            return next(createHttpError(404, "Book not found."));
+        }
 
-export { createBook ,updateBook,listBooks};
+        return res.json(book);
+    } catch (err) {
+        return next(createHttpError(500, "Error while getting a book"));
+    }
+};
+
+const deleteBook = async (req: Request, res: Response, next: NextFunction) => {
+    const bookId = req.params.bookId;
+
+    const book = await bookModel.findOne({ _id: bookId });
+    if (!book) {
+        return next(createHttpError(404, "Book not found"));
+    }
+
+    // Check Access
+    const _req = req as AuthRequest;
+    if (book.author.toString() !== _req.userId) {
+        return next(createHttpError(403, "You can not update others book."));
+    }
+    
+    // book-covers/dkzujeho0txi0yrfqjsm
+    // https://res.cloudinary.com/degzfrkse/image/upload/v1712590372/book-covers/u4bt9x7sv0r0cg5cuynm.png
+
+    const coverFileSplits = book.coverImage.split("/");
+    const coverImagePublicId =
+        coverFileSplits.at(-2) +
+        "/" +
+        coverFileSplits.at(-1)?.split(".").at(-2);
+
+    // console.log("coverImagePublicId",coverImagePublicId); //// book-covers/dkzujeho0txi0yrfqjsm
+
+    const bookFileSplits = book.file.split("/");
+    const bookFilePublicId =
+        bookFileSplits.at(-2) + "/" + bookFileSplits.at(-1);
+    console.log("bookFilePublicId", bookFilePublicId);
+
+    // // todo: add try error block
+    // await cloudinary.uploader.destroy(coverImagePublicId);
+    // await cloudinary.uploader.destroy(bookFilePublicId, {
+    //     resource_type: "raw",
+    // });
+
+    // await bookModel.deleteOne({ _id: bookId });
+    try {
+        await cloudinary.uploader.destroy(coverImagePublicId);
+        await cloudinary.uploader.destroy(bookFilePublicId, {
+            resource_type: "raw",
+        });
+    
+  
+        await bookModel.deleteOne({ _id: bookId });
+    
+        console.log("Book and associated files deleted successfully");
+    } catch (error) {
+        throw new Error("Failed to delete book or associated files");
+    }
+
+    return res.sendStatus(204);
+};
+
+export { createBook ,updateBook,listBooks,getSingleBook,deleteBook};

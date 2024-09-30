@@ -9,6 +9,11 @@ import bookRouter from "./book/bookRouter";
 
 const app =express()
 app.use(express.json());
+app.use(
+    cors({
+        origin: config.frontendDomain,
+    })
+);
 
 
 //Routes
@@ -25,4 +30,8 @@ app.use("/api/books", bookRouter);
 //global error handler
 app.use(globalErrorHandler);
 export default app;
+
+function cors(arg0: { origin: any; }): any {
+    throw new Error("Function not implemented.");
+}
 

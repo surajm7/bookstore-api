@@ -1,5 +1,6 @@
 import { config } from "./config/config";
 import express, { NextFunction } from "express";
+import cors from "cors";
 import createHttpError, { HttpError } from "http-errors";
 import globalErrorHandler from "./middlewares/globalErrorHandler"
 import userRouter from "./user/userRouter";
@@ -31,7 +32,7 @@ app.use("/api/books", bookRouter);
 app.use(globalErrorHandler);
 export default app;
 
-function cors(arg0: { origin: any; }): any {
-    throw new Error("Function not implemented.");
-}
+// function cors(arg0: { origin: any; }): any {
+//     throw new Error("Function not implemented.");
+// }
 
